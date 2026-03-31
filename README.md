@@ -6,13 +6,6 @@ A prototype full-stack dashboard for monitoring plantation soil and irrigation c
 
 This project was reconstructed from a combined source export and organized into a cleaner repository structure for version control and submission. It represents a **dashboard prototype** for smart plantation monitoring rather than a fully production-ready deployment.
 
-The intended stack is:
-
-- **Frontend:** React + Vite
-- **Backend:** Express 5
-- **API contract:** OpenAPI
-- **Client/code generation:** Orval + Zod
-- **Data fetching:** React Query
 
 ## Main Features
 
