@@ -1,0 +1,273 @@
+openapi: 3.1.0
+info:
+  title: Api
+  version: 0.1.0
+  description: Smart Plantation Monitoring Dashboard API
+servers:
+  - url: /api
+    description: Base API path
+tags:
+  - name: health
+  - name: plots
+  - name: irrigation
+  - name: alerts
+  - name: weather
+paths:
+  /healthz:
+    get:
+      operationId: healthCheck
+      tags: [health]
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthStatus"
+
+  /plots:
+    get:
+      operationId: getPlots
+      tags: [plots]
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/PlotSummary"
+
+  /plots/{plotId}/moisture:
+    get:
+      operationId: getPlotMoisture
+      tags: [plots]
+      parameters:
+        - name: plotId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MoistureData"
+
+  /plots/{plotId}/salinity:
+    get:
+      operationId: getPlotSalinity
+      tags: [plots]
+      parameters:
+        - name: plotId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SalinityPhData"
+
+  /irrigation:
+    get:
+      operationId: getIrrigationStatus
+      tags: [irrigation]
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/IrrigationStatus"
+
+  /irrigation/override:
+    post:
+      operationId: setIrrigationOverride
+      tags: [irrigation]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/IrrigationOverrideRequest"
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/IrrigationStatus"
+
+  /weather:
+    get:
+      operationId: getWeatherData
+      tags: [weather]
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WeatherData"
+
+  /alerts:
+    get:
+      operationId: getAlerts
+      tags: [alerts]
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/AlertEntry"
+
+  /alerts/{alertId}/action:
+    post:
+      operationId: acknowledgeAlert
+      tags: [alerts]
+      parameters:
+        - name: alertId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AlertEntry"
+
+components:
+  schemas:
+    HealthStatus:
+      type: object
+      properties:
+        status:
+          type: string
+      required: [status]
+
+    PlotSummary:
+      type: object
+      properties:
+        id: { type: string }
+        name: { type: string }
+        healthStatus:
+          type: string
+          enum: [healthy, warning, critical]
+        moisture10cm: { type: number }
+        moisture30cm: { type: number }
+        moisture60cm: { type: number }
+        bulkEC: { type: number }
+        pH: { type: number }
+        lastUpdated: { type: string }
+        trend7day:
+          type: array
+          items: { type: number }
+      required: [id, name, healthStatus, moisture10cm, moisture30cm,
+                 moisture60cm, bulkEC, pH, lastUpdated, trend7day]
+
+    MoistureData:
+      type: object
+      properties:
+        plotId: { type: string }
+        readings:
+          type: array
+          items:
+            $ref: "#/components/schemas/MoistureReading"
+        stressThreshold: { type: number }
+      required: [plotId, readings, stressThreshold]
+
+    MoistureReading:
+      type: object
+      properties:
+        timestamp: { type: string }
+        depth10cm: { type: number }
+        depth30cm: { type: number }
+        depth60cm: { type: number }
+      required: [timestamp, depth10cm, depth30cm, depth60cm]
+
+    SalinityPhData:
+      type: object
+      properties:
+        plotId: { type: string }
+        bulkEC: { type: number }
+        naConcentration: { type: number }
+        clConcentration: { type: number }
+        no3Concentration: { type: number }
+        pH: { type: number }
+        soilCO2: { type: number }
+        ecHistory:
+          type: array
+          items: { type: number }
+        phHistory:
+          type: array
+          items: { type: number }
+        co2History:
+          type: array
+          items: { type: number }
+      required: [plotId, bulkEC, naConcentration, clConcentration,
+                 no3Concentration, pH, soilCO2, ecHistory, phHistory, co2History]
+
+    IrrigationStatus:
+      type: object
+      properties:
+        valveOpen: { type: boolean }
+        manualOverride: { type: boolean }
+        currentMoisture: { type: number }
+        lastRainHoursAgo: { type: number }
+        autoTriggerActive: { type: boolean }
+        plotId: { type: string }
+      required: [valveOpen, manualOverride, currentMoisture,
+                 lastRainHoursAgo, autoTriggerActive, plotId]
+
+    IrrigationOverrideRequest:
+      type: object
+      properties:
+        enabled: { type: boolean }
+        plotId: { type: string }
+      required: [enabled, plotId]
+
+    WeatherData:
+      type: object
+      properties:
+        temperature: { type: number }
+        humidity: { type: number }
+        windSpeed: { type: number }
+        solarRadiation: { type: number }
+        ETo: { type: number }
+        plotRainfall: { type: number }
+        referenceRainfall: { type: number }
+        rainfallHistory:
+          type: array
+          items: { type: number }
+        EToHistory:
+          type: array
+          items: { type: number }
+      required: [temperature, humidity, windSpeed, solarRadiation, ETo,
+                 plotRainfall, referenceRainfall, rainfallHistory, EToHistory]
+
+    AlertEntry:
+      type: object
+      properties:
+        id: { type: string }
+        timestamp: { type: string }
+        plotId: { type: string }
+        severity:
+          type: string
+          enum: [info, warning, critical]
+        message: { type: string }
+        actionRecommended: { type: string }
+        acknowledged: { type: boolean }
+      required: [id, timestamp, plotId, severity, message,
+                 actionRecommended, acknowledged]
+
+
+================================================================================
+BACKEND — artifacts/api-server/src/routes/
+================================================================================
+
+
+────────────────────────────────────────────────────────────────────────────────
